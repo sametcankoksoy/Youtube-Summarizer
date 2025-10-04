@@ -4,9 +4,26 @@ from langchain_community.document_loaders import YoutubeLoader
 from langchain_core.prompts import PromptTemplate
 from langchain_community.vectorstores import FAISS
 import os
+import random
+
+proxies_env = os.getenv("PROXIES", "")
+PROXIES = proxies_env.split(",") if proxies_env else []
+
+def set_random_proxy():
+    if PROXIES:
+        proxy = random.choice(PROXIES)
+        proxy_url = f"http://{proxy}" if not proxy.startswith("http") else proxy
+        os.environ["http_proxy"] = proxy_url
+        os.environ["https_proxy"] = proxy_url
+        print(f"[INFO] Using proxy: {proxy_url}")
+    else:
+        print("[INFO] No proxy found, using default network")
+
+
 
 def create_db_from_youtube_url(video_url: str,api_key:str) -> FAISS:
     os.environ['GOOGLE_API_KEY'] = api_key
+    set_random_proxy()
     embeddings = GoogleGenerativeAIEmbeddings(model='models/gemini-embedding-001')
     loader = YoutubeLoader.from_youtube_url(video_url)
     transcript = loader.load()
