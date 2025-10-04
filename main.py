@@ -3,6 +3,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.proxies import GenericProxyConfig
 import os
 import random
 
@@ -22,15 +23,14 @@ def set_random_proxy():
 
 # ---------- TRANSCRIPT FETCHER ----------
 def fetch_youtube_transcript(video_url: str):
-    # video_id çıkar
     video_id = video_url.split("v=")[-1]
     proxy = set_random_proxy()
-    proxies = [proxy] if proxy else None
-    
-    transcript_list = YouTubeTranscriptApi.list_transcripts(video_id, proxies=proxies)
-    transcript = transcript_list.find_transcript(['en']).fetch()
-    
-    # transcript'i text haline getir
+    proxy_config = GenericProxyConfig(proxy) if proxy else None
+
+    # Güncel youtube-transcript-api kullanımı
+    transcript = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxy_config)
+
+    # transcript'i tek string hâline getir
     full_text = " ".join([t['text'] for t in transcript])
     return full_text
 
